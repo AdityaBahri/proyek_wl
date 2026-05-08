@@ -38,7 +38,7 @@ export async function POST(request) {
     const existingBookings = await prisma.booking.findMany({
       where: { scheduleId: body.scheduleId, status: { not: 'cancelled' } },
     });
-    const takenSeats = existingBookings.flatMap(b => JSON.parse(b.selectedSeats || '[]'));
+    const takenSeats = existingBookings.flatMap(b => b.selectedSeats || []);
     const conflict = seats.filter(s => takenSeats.includes(s));
     if (conflict.length > 0) {
       return NextResponse.json({ error: `Kursi ${conflict.join(', ')} sudah terisi` }, { status: 400 });
@@ -51,7 +51,7 @@ export async function POST(request) {
       data: {
         passengerId: body.passengerId,
         scheduleId: body.scheduleId,
-        selectedSeats: JSON.stringify(seats),
+        selectedSeats: seats,
         totalPrice: schedule.ticketPrice * seats.length,
         status: 'pending',
       },

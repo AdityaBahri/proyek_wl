@@ -28,7 +28,7 @@ export async function POST(request) {
         licensePlate: body.licensePlate,
         vehicleType: body.vehicleType,
         seatCapacity: parseInt(body.seatCapacity),
-        facilities: JSON.stringify(body.facilities || []),
+        facilities: body.facilities || [],
         imageUrl: body.imageUrl || null,
       },
     });

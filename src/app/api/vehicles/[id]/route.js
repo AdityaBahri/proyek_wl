@@ -11,7 +11,7 @@ export async function PUT(request, { params }) {
         licensePlate: body.licensePlate,
         vehicleType: body.vehicleType,
         seatCapacity: body.seatCapacity ? parseInt(body.seatCapacity) : undefined,
-        facilities: body.facilities ? JSON.stringify(body.facilities) : undefined,
+        facilities: body.facilities || undefined,
         isActive: body.isActive,
       },
     });

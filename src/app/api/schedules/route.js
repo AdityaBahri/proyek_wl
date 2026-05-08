@@ -11,8 +11,8 @@ export async function GET(request) {
     const where = { isActive: true };
     if (origin || destination) {
       where.route = {};
-      if (origin) where.route.originCity = { contains: origin };
-      if (destination) where.route.destinationCity = { contains: destination };
+      if (origin) where.route.originCity = { contains: origin, mode: 'insensitive' };
+      if (destination) where.route.destinationCity = { contains: destination, mode: 'insensitive' };
     }
     if (date) {
       const startDate = new Date(date);

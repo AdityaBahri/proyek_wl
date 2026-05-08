@@ -55,7 +55,7 @@ export default function PassengerDashboard() {
                   <tr key={b.id}>
                     <td>{b.schedule?.route?.originCity} → {b.schedule?.route?.destinationCity}</td>
                     <td>{new Date(b.schedule?.departureDateTime).toLocaleDateString('id-ID')}</td>
-                    <td>{JSON.parse(b.selectedSeats || '[]').join(', ')}</td>
+                    <td>{(b.selectedSeats || []).join(', ')}</td>
                     <td>{formatCurrency(b.totalPrice)}</td>
                     <td><span className={`badge badge-${b.status === 'paid' || b.status === 'completed' ? 'success' : b.status === 'cancelled' ? 'danger' : 'warning'}`}>{b.status === 'pending' ? 'Menunggu' : b.status === 'paid' ? 'Dibayar' : b.status === 'completed' ? 'Selesai' : 'Dibatalkan'}</span></td>
                     <td><Link href={`/passenger/bookings/${b.id}`} className="btn btn-secondary btn-sm">Detail</Link></td>

@@ -113,7 +113,7 @@ export default function OperatorBookings() {
               <div><span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Kontak</span><div style={{ fontWeight: 600 }}>{selectedBooking.passenger?.phone || selectedBooking.passenger?.email}</div></div>
               <div><span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Rute</span><div style={{ fontWeight: 600 }}>{selectedBooking.schedule?.route?.originCity} → {selectedBooking.schedule?.route?.destinationCity}</div></div>
               <div><span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Keberangkatan</span><div style={{ fontWeight: 600 }}>{formatDateTime(selectedBooking.schedule?.departureDateTime)}</div></div>
-              <div><span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Kursi</span><div style={{ fontWeight: 600 }}>{JSON.parse(selectedBooking.selectedSeats || '[]').join(', ')}</div></div>
+              <div><span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Kursi</span><div style={{ fontWeight: 600 }}>{(selectedBooking.selectedSeats || []).join(', ')}</div></div>
               <div><span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Total Harga</span><div style={{ fontWeight: 700, color: 'var(--accent-primary)' }}>{formatCurrency(selectedBooking.totalPrice)}</div></div>
             </div>
 

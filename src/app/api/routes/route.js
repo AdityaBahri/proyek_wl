@@ -8,8 +8,8 @@ export async function GET(request) {
     const destination = searchParams.get('destination');
 
     const where = {};
-    if (origin) where.originCity = { contains: origin };
-    if (destination) where.destinationCity = { contains: destination };
+    if (origin) where.originCity = { contains: origin, mode: 'insensitive' };
+    if (destination) where.destinationCity = { contains: destination, mode: 'insensitive' };
 
     const routes = await prisma.route.findMany({ where, orderBy: { originCity: 'asc' } });
     return NextResponse.json({ routes });
@@ -25,8 +25,8 @@ export async function POST(request) {
       data: {
         originCity: body.originCity,
         destinationCity: body.destinationCity,
-        boardingPoints: JSON.stringify(body.boardingPoints || []),
-        dropPoints: JSON.stringify(body.dropPoints || []),
+        boardingPoints: body.boardingPoints || [],
+        dropPoints: body.dropPoints || [],
         distance: body.distance || null,
         estimatedTime: body.estimatedTime || null,
       },

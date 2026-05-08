@@ -30,8 +30,8 @@ export default function OperatorRoutes() {
         destinationCity: route.destinationCity,
         distance: route.distance || '',
         estimatedTime: route.estimatedTime || '',
-        boardingPoints: JSON.parse(route.boardingPoints || '[]').join(', '),
-        dropPoints: JSON.parse(route.dropPoints || '[]').join(', ')
+        boardingPoints: (route.boardingPoints || []).join(', '),
+        dropPoints: (route.dropPoints || []).join(', ')
       });
     } else {
       setEditingId(null);
@@ -95,8 +95,8 @@ export default function OperatorRoutes() {
                     <td style={{ fontWeight: 600 }}>{r.originCity} → {r.destinationCity}</td>
                     <td>{r.estimatedTime || '-'}</td>
                     <td>{r.distance || '-'}</td>
-                    <td>{JSON.parse(r.boardingPoints || '[]').join(', ')}</td>
-                    <td>{JSON.parse(r.dropPoints || '[]').join(', ')}</td>
+                    <td>{(r.boardingPoints || []).join(', ')}</td>
+                    <td>{(r.dropPoints || []).join(', ')}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button className="btn btn-secondary btn-sm" onClick={() => handleOpenModal(r)}><Edit size={14} /></button>

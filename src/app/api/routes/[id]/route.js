@@ -10,8 +10,8 @@ export async function PUT(request, { params }) {
       data: {
         originCity: body.originCity,
         destinationCity: body.destinationCity,
-        boardingPoints: body.boardingPoints ? JSON.stringify(body.boardingPoints) : undefined,
-        dropPoints: body.dropPoints ? JSON.stringify(body.dropPoints) : undefined,
+        boardingPoints: body.boardingPoints || undefined,
+        dropPoints: body.dropPoints || undefined,
         distance: body.distance,
         estimatedTime: body.estimatedTime,
       },

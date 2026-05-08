@@ -71,9 +71,12 @@ export function generateSeatLayout(capacity) {
   return seats;
 }
 
-export function parseJSON(str, fallback = []) {
+export function parseJSON(value, fallback = []) {
+  if (Array.isArray(value)) return value;
+  if (value === null || value === undefined) return fallback;
   try {
-    return JSON.parse(str);
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : fallback;
   } catch {
     return fallback;
   }

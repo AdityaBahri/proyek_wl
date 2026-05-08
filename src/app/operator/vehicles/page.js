@@ -35,7 +35,7 @@ export default function OperatorVehicles() {
         licensePlate: vehicle.licensePlate,
         vehicleType: vehicle.vehicleType,
         seatCapacity: vehicle.seatCapacity,
-        facilities: JSON.parse(vehicle.facilities || '[]')
+        facilities: vehicle.facilities || []
       });
     } else {
       setEditingId(null);
@@ -104,7 +104,7 @@ export default function OperatorVehicles() {
                     <td>{v.seatCapacity} Kursi</td>
                     <td>
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                        {JSON.parse(v.facilities || '[]').map(f => (
+                        {(v.facilities || []).map(f => (
                           <span key={f} className="badge badge-info" style={{ fontSize: '0.65rem' }}>{f}</span>
                         ))}
                       </div>

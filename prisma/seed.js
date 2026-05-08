@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
-  // Clean existing data
+  // Clean existing data (order matters due to foreign keys)
   await prisma.review.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.booking.deleteMany();
@@ -53,63 +53,61 @@ async function main() {
     },
   });
 
-  // Create Vehicles
+  // Create Vehicles (PostgreSQL Json type — pass arrays directly)
   const v1 = await prisma.vehicle.create({
     data: {
       agencyId: agency1.id, licensePlate: 'B 1234 XY', vehicleType: 'Toyota HiAce',
-      seatCapacity: 12, facilities: JSON.stringify(['AC', 'Musik', 'USB Charger', 'Wi-Fi']),
+      seatCapacity: 12, facilities: ['AC', 'Musik', 'USB Charger', 'Wi-Fi'],
     },
   });
   const v2 = await prisma.vehicle.create({
     data: {
       agencyId: agency1.id, licensePlate: 'B 5678 AB', vehicleType: 'Mercedes Sprinter',
-      seatCapacity: 16, facilities: JSON.stringify(['AC', 'Musik', 'Reclining Seat', 'Snack']),
+      seatCapacity: 16, facilities: ['AC', 'Musik', 'Reclining Seat', 'Snack'],
     },
   });
   const v3 = await prisma.vehicle.create({
     data: {
       agencyId: agency2.id, licensePlate: 'D 9012 CD', vehicleType: 'Isuzu Elf',
-      seatCapacity: 12, facilities: JSON.stringify(['AC', 'TV', 'USB Charger']),
+      seatCapacity: 12, facilities: ['AC', 'TV', 'USB Charger'],
     },
   });
 
-  // Create Routes
+  // Create Routes (PostgreSQL Json type — pass arrays directly)
   const r1 = await prisma.route.create({
     data: {
       originCity: 'Jakarta', destinationCity: 'Bandung',
-      boardingPoints: JSON.stringify(['Terminal Lebak Bulus', 'Cawang', 'Bekasi Timur']),
-      dropPoints: JSON.stringify(['Pasteur', 'Dago', 'Buah Batu']),
+      boardingPoints: ['Terminal Lebak Bulus', 'Cawang', 'Bekasi Timur'],
+      dropPoints: ['Pasteur', 'Dago', 'Buah Batu'],
       distance: '150 km', estimatedTime: '3 jam',
     },
   });
   const r2 = await prisma.route.create({
     data: {
       originCity: 'Jakarta', destinationCity: 'Semarang',
-      boardingPoints: JSON.stringify(['Terminal Lebak Bulus', 'Cawang']),
-      dropPoints: JSON.stringify(['Simpang Lima', 'Terminal Terboyo']),
+      boardingPoints: ['Terminal Lebak Bulus', 'Cawang'],
+      dropPoints: ['Simpang Lima', 'Terminal Terboyo'],
       distance: '440 km', estimatedTime: '7 jam',
     },
   });
   const r3 = await prisma.route.create({
     data: {
       originCity: 'Bandung', destinationCity: 'Yogyakarta',
-      boardingPoints: JSON.stringify(['Pasteur', 'Cibiru']),
-      dropPoints: JSON.stringify(['Malioboro', 'Terminal Giwangan']),
+      boardingPoints: ['Pasteur', 'Cibiru'],
+      dropPoints: ['Malioboro', 'Terminal Giwangan'],
       distance: '420 km', estimatedTime: '8 jam',
     },
   });
   const r4 = await prisma.route.create({
     data: {
       originCity: 'Surabaya', destinationCity: 'Malang',
-      boardingPoints: JSON.stringify(['Terminal Purabaya', 'Waru']),
-      dropPoints: JSON.stringify(['Arjosari', 'Alun-Alun Malang']),
+      boardingPoints: ['Terminal Purabaya', 'Waru'],
+      dropPoints: ['Arjosari', 'Alun-Alun Malang'],
       distance: '90 km', estimatedTime: '2 jam',
     },
   });
 
   // Create Schedules
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
   const makeDate = (day, hour) => {
     const d = new Date();
     d.setDate(d.getDate() + day);
