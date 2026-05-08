@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  phone     String?
+  role      String   @default("passenger") // super_admin, operator, passenger
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agency   TravelAgency?
+  bookings Booking[]
+  reviews  Review[]
+}
+
+model TravelAgency {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  agencyName       String
+  contactNumber    String
+  address          String
+  legalDocumentUrl String?
+  description      String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicles Vehicle[]
+}
+
+model Vehicle {
+  id           String   @id @default(cuid())
+  agencyId     String
+  licensePlate String
+  vehicleType  String
+  seatCapacity Int
+  facilities   String   @default("[]") // JSON string
+  imageUrl     String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  agency    TravelAgency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  schedules Schedule[]
+}
+
+model Route {
+  id              String   @id @default(cuid())
+  originCity      String
+  destinationCity String
+  boardingPoints  String   @default("[]") // JSON string
+  dropPoints      String   @default("[]") // JSON string
+  distance        String?
+  estimatedTime   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  schedules Schedule[]
+}
+
+model Schedule {
+  id                String   @id @default(cuid())
+  routeId           String
+  vehicleId         String
+  departureDateTime DateTime
+  arrivalDateTime   DateTime
+  ticketPrice       Int
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  route    Route     @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  vehicle  Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  passengerId   String
+  scheduleId    String
+  bookingDate   DateTime @default(now())
+  selectedSeats String   @default("[]") // JSON string e.g. ["A1","A2"]
+  totalPrice    Int
+  status        String   @default("pending") // pending, paid, cancelled, completed
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  passenger User     @relation(fields: [passengerId], references: [id], onDelete: Cascade)
+  schedule  Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  payment   Payment?
+  review    Review?
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  bookingId     String   @unique
+  paymentMethod String
+  proofUrl      String?
+  paymentStatus String   @default("pending") // pending, verified, rejected
+  paymentDate   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  bookingId   String   @unique
+  passengerId String
+  rating      Int      // 1-5
+  comment     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  passenger User    @relation(fields: [passengerId], references: [id], onDelete: Cascade)
+}
