@@ -2,28 +2,42 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Mail, Lock, Phone, UserPlus } from 'lucide-react';
+import { User, Mail, Lock, Phone, UserPlus, AlertCircle } from 'lucide-react';
+import { validatePhone } from '@/lib/utils';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '', phone: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.password !== form.confirmPassword) {
+      setError('Password dan konfirmasi password tidak cocok.');
+      return;
+    }
+    if (form.phone && !validatePhone(form.phone)) {
+      setError('Format nomor telepon tidak valid. Gunakan format 08... atau +62...');
+      return;
+    }
+
     setError('');
     setLoading(true);
     try {
+      const { confirmPassword, ...submitData } = form;
       const res = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, role: 'passenger' }),
+        body: JSON.stringify({ ...submitData, role: 'passenger' }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error); setLoading(false); return; }
+      if (!res.ok) { setError(data.error || 'Gagal mendaftar'); setLoading(false); return; }
       router.push('/auth/login?registered=true');
-    } catch { setError('Terjadi kesalahan'); setLoading(false); }
+    } catch { 
+      setError('Terjadi kesalahan tidak terduga. Silakan coba lagi.'); 
+      setLoading(false); 
+    }
   };
 
   return (
@@ -35,27 +49,36 @@ export default function RegisterPage() {
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: 8 }}>Daftar untuk memesan tiket travel</p>
         </div>
 
-        {error && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, color: '#ef4444', fontSize: '0.85rem' }}>{error}</div>}
+        {error && (
+          <div className="callout callout-danger">
+            <div className="callout-icon"><AlertCircle size={16} /></div>
+            <div>{error}</div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="input-group" style={{ marginBottom: 16 }}>
             <label><User size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> Nama Lengkap</label>
-            <input type="text" className="glass-input" placeholder="Masukkan nama lengkap" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+            <input type="text" className="glass-input" placeholder="Masukkan nama lengkap" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setError(''); }} required />
           </div>
           <div className="input-group" style={{ marginBottom: 16 }}>
             <label><Mail size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> Email</label>
-            <input type="email" className="glass-input" placeholder="nama@email.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
+            <input type="email" className="glass-input" placeholder="nama@email.com" value={form.email} onChange={e => { setForm({ ...form, email: e.target.value }); setError(''); }} required />
           </div>
           <div className="input-group" style={{ marginBottom: 16 }}>
             <label><Phone size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> No. Telepon</label>
-            <input type="tel" className="glass-input" placeholder="08xxxxxxxxxx" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+            <input type="tel" className="glass-input" placeholder="08xxxxxxxxxx" value={form.phone} onChange={e => { setForm({ ...form, phone: e.target.value }); setError(''); }} />
+          </div>
+          <div className="input-group" style={{ marginBottom: 16 }}>
+            <label><Lock size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> Password</label>
+            <input type="password" className="glass-input" placeholder="Minimal 6 karakter" value={form.password} onChange={e => { setForm({ ...form, password: e.target.value }); setError(''); }} required minLength={6} />
           </div>
           <div className="input-group" style={{ marginBottom: 24 }}>
-            <label><Lock size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> Password</label>
-            <input type="password" className="glass-input" placeholder="Minimal 6 karakter" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required minLength={6} />
+            <label><Lock size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> Konfirmasi Password</label>
+            <input type="password" className="glass-input" placeholder="Ulangi password" value={form.confirmPassword} onChange={e => { setForm({ ...form, confirmPassword: e.target.value }); setError(''); }} required minLength={6} />
           </div>
-          <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', padding: '14px', fontSize: '1rem' }}>
-            {loading ? <span className="spinner" style={{ width: 20, height: 20, margin: 0, borderWidth: 2 }} /> : <><UserPlus size={18} /> Daftar</>}
+          <button type="submit" className={`btn btn-primary ${loading ? 'btn-loading' : ''}`} disabled={loading} style={{ width: '100%', padding: '14px', fontSize: '1rem' }}>
+            {loading ? <span className="btn-spinner" /> : <><UserPlus size={18} /> Daftar</>}
           </button>
         </form>
 

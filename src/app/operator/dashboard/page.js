@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { Ticket, Bus, Calendar, Star, TrendingUp } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { Ticket, Bus, Calendar, Star, TrendingUp, CheckCircle, FileText } from 'lucide-react';
+import { formatCurrency, formatBookingId, getStatusBadgeClass, getStatusLabel, formatDateTime } from '@/lib/utils';
 
 export default function OperatorDashboard() {
   const { data: session } = useSession();
@@ -14,8 +14,8 @@ export default function OperatorDashboard() {
   useEffect(() => {
     if (session?.user?.agencyId) {
       Promise.all([
-        fetch(`/api/agencies/${session.user.agencyId}`).then(r => r.json()).catch(() => ({})), // Note: Need to adjust if API doesn't exist, will use bookings to derive stats for now
-        fetch('/api/bookings').then(r => r.json()) // In a real app, filter by agency
+        fetch(`/api/agencies/${session.user.agencyId}`).then(r => r.json()).catch(() => ({})),
+        fetch('/api/bookings').then(r => r.json())
       ]).then(([_, bookingsData]) => {
         const agencyBookings = (bookingsData.bookings || []).filter(b => b.schedule?.vehicle?.agencyId === session.user.agencyId);
         
@@ -24,7 +24,6 @@ export default function OperatorDashboard() {
         const completedBookings = agencyBookings.filter(b => b.status === 'completed' || b.status === 'paid');
         const revenue = completedBookings.reduce((sum, b) => sum + b.totalPrice, 0);
         
-        // Mocking vehicle and schedule count for simplicity in this view, they should ideally come from separate endpoints
         setStats({
           bookings: agencyBookings.length,
           revenue,
@@ -50,6 +49,21 @@ export default function OperatorDashboard() {
         <div><h1>Dashboard Operator</h1><p style={{ color: 'var(--text-secondary)' }}>Ringkasan operasional travel Anda.</p></div>
       </div>
 
+      <div className="quick-action-grid">
+        <Link href="/operator/bookings" className="glass quick-action-card">
+          <div className="quick-action-icon" style={{ background: 'var(--success)' }}><CheckCircle size={24} /></div>
+          <div className="quick-action-label">Validasi Pemesanan</div>
+        </Link>
+        <Link href="/operator/schedules" className="glass quick-action-card">
+          <div className="quick-action-icon" style={{ background: 'var(--accent-primary)' }}><Calendar size={24} /></div>
+          <div className="quick-action-label">Kelola Jadwal</div>
+        </Link>
+        <Link href="/operator/vehicles" className="glass quick-action-card">
+          <div className="quick-action-icon" style={{ background: 'var(--warning)' }}><Bus size={24} /></div>
+          <div className="quick-action-label">Data Armada</div>
+        </Link>
+      </div>
+
       <div className="stats-grid">
         {statCards.map((s, i) => (
           <div key={i} className="glass stat-card">
@@ -63,22 +77,23 @@ export default function OperatorDashboard() {
       <div className="glass" style={{ padding: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h3>Pemesanan Terbaru</h3>
-          <Link href="/operator/bookings" className="btn btn-secondary btn-sm">Lihat Semua</Link>
+          <Link href="/operator/bookings" className="btn btn-secondary btn-sm tooltip-btn" data-tooltip="Lihat seluruh riwayat pesanan">Lihat Semua</Link>
         </div>
         {loading ? <div className="spinner" /> : recentBookings.length === 0 ? (
           <div className="empty-state"><p>Belum ada pemesanan.</p></div>
         ) : (
           <div className="glass-table-wrapper">
             <table className="glass-table">
-              <thead><tr><th>Penumpang</th><th>Rute</th><th>Tanggal</th><th>Status</th><th>Total</th></tr></thead>
+              <thead><tr><th>ID</th><th>Penumpang</th><th>Rute</th><th>Tanggal Keberangkatan</th><th>Status</th><th>Total</th></tr></thead>
               <tbody>
-                {recentBookings.map(b => (
+                {recentBookings.map((b, idx) => (
                   <tr key={b.id}>
+                    <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>{formatBookingId(b.id, idx)}</td>
                     <td>{b.passenger?.name}</td>
                     <td>{b.schedule?.route?.originCity} → {b.schedule?.route?.destinationCity}</td>
-                    <td>{new Date(b.schedule?.departureDateTime).toLocaleDateString('id-ID')}</td>
-                    <td><span className={`badge badge-${b.status === 'paid' || b.status === 'completed' ? 'success' : b.status === 'cancelled' ? 'danger' : 'warning'}`}>{b.status}</span></td>
-                    <td>{formatCurrency(b.totalPrice)}</td>
+                    <td>{formatDateTime(b.schedule?.departureDateTime)}</td>
+                    <td><span className={`badge ${getStatusBadgeClass(b.status)}`}>{getStatusLabel(b.status)}</span></td>
+                    <td style={{ fontWeight: 600 }}>{formatCurrency(b.totalPrice)}</td>
                   </tr>
                 ))}
               </tbody>

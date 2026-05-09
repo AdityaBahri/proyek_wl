@@ -1,15 +1,14 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Building, Plus, X } from 'lucide-react';
+import { Building, Plus, X, Info } from 'lucide-react';
 import ConfirmModal from '@/components/ConfirmModal';
+import { useToast } from '@/components/ToastContext';
 
 export default function AdminAgencies() {
+  const showToast = useToast();
   const [agencies, setAgencies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({
-    agencyName: '', contactNumber: '', address: '', description: '', userId: '' // Needs a proper user assignment in real scenario
-  });
+  const [statusUpdating, setStatusUpdating] = useState(false);
   const [confirmProps, setConfirmProps] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {} });
 
   const fetchAgencies = () => {
@@ -24,16 +23,25 @@ export default function AdminAgencies() {
     setConfirmProps({
       isOpen: true,
       title: 'Konfirmasi Perubahan Status',
-      message: `Yakin ingin ${agency.isActive ? 'menonaktifkan' : 'mengaktifkan'} mitra ini?`,
+      message: `Yakin ingin ${agency.isActive ? 'menonaktifkan' : 'menyetujui dan mengaktifkan'} mitra travel "${agency.agencyName}"?`,
       isDanger: agency.isActive,
-      confirmText: agency.isActive ? 'Nonaktifkan' : 'Ya, Aktifkan',
+      confirmText: agency.isActive ? 'Nonaktifkan' : 'Ya, Setujui & Aktifkan',
       onConfirm: async () => {
-        await fetch(`/api/agencies/${agency.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ isActive: !agency.isActive })
-        });
-        fetchAgencies();
+        setStatusUpdating(true);
+        try {
+          const res = await fetch(`/api/agencies/${agency.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ isActive: !agency.isActive })
+          });
+          if (!res.ok) throw new Error('Failed to update');
+          showToast(`Mitra travel berhasil ${agency.isActive ? 'dinonaktifkan' : 'diaktifkan'}`, 'success');
+          fetchAgencies();
+        } catch {
+          showToast('Gagal mengubah status mitra travel', 'error');
+        } finally {
+          setStatusUpdating(false);
+        }
       }
     });
   };
@@ -41,9 +49,16 @@ export default function AdminAgencies() {
   return (
     <div className="fade-in">
       <div className="dashboard-header">
-        <h1>Mitra Travel</h1>
-        {/* Placeholder for Add Agency - In real app, requires creating User first or assigning existing */}
+        <h1>Verifikasi Mitra Travel</h1>
         <button className="btn btn-primary" onClick={() => alert('Fitur tambah mitra akan tersedia segera.')}><Plus size={16} /> Tambah Mitra</button>
+      </div>
+
+      <div className="info-callout" style={{ marginBottom: 24 }}>
+        <Info size={20} />
+        <div>
+          <h4>Persetujuan Mitra Travel</h4>
+          <p>Mitra travel yang baru mendaftar (Status: Menunggu) tidak dapat beroperasi sebelum Anda menyetujuinya. Pastikan untuk memverifikasi dokumen mereka sebelum memberikan persetujuan.</p>
+        </div>
       </div>
 
       {loading ? <div className="spinner" /> : agencies.length === 0 ? (
@@ -63,11 +78,12 @@ export default function AdminAgencies() {
                     <td><span className={`badge ${a.isActive ? 'badge-success' : 'badge-warning'}`}>{a.isActive ? 'Aktif' : 'Menunggu / Nonaktif'}</span></td>
                     <td>
                       <button 
-                        className={`btn btn-sm ${a.isActive ? 'btn-danger' : 'btn-success'}`}
+                        className={`btn btn-sm ${a.isActive ? 'btn-danger' : 'btn-success'} ${statusUpdating ? 'btn-loading' : ''}`}
                         style={!a.isActive ? { background: 'var(--success)' } : {}}
                         onClick={() => handleToggleStatus(a)}
+                        disabled={statusUpdating}
                       >
-                        {a.isActive ? 'Nonaktifkan' : 'Setujui / Aktifkan'}
+                        {statusUpdating ? <span className="btn-spinner" /> : (a.isActive ? 'Nonaktifkan' : 'Setujui / Aktifkan')}
                       </button>
                     </td>
                   </tr>

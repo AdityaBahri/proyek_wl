@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { MapPin, Clock, Bus, ArrowRight, Search, ChevronLeft } from 'lucide-react';
+import { MapPin, Clock, Bus, ArrowRight, Search, ChevronLeft, RefreshCcw } from 'lucide-react';
 import { formatCurrency, formatTime, formatDate, parseJSON } from '@/lib/utils';
 
 function SearchContent() {
@@ -27,12 +27,13 @@ function SearchContent() {
 
   const cities = [...new Set(routes.flatMap(r => [r.originCity, r.destinationCity]))];
 
-  const fetchSchedules = async () => {
+  const fetchSchedules = async (overrideFilters = null) => {
     setLoading(true);
+    const activeFilters = overrideFilters || filters;
     const params = new URLSearchParams();
-    if (filters.origin) params.set('origin', filters.origin);
-    if (filters.destination) params.set('destination', filters.destination);
-    if (filters.date) params.set('date', filters.date);
+    if (activeFilters.origin) params.set('origin', activeFilters.origin);
+    if (activeFilters.destination) params.set('destination', activeFilters.destination);
+    if (activeFilters.date) params.set('date', activeFilters.date);
     const res = await fetch(`/api/schedules?${params.toString()}`);
     const data = await res.json();
     setSchedules(data.schedules || []);
@@ -42,6 +43,12 @@ function SearchContent() {
   const handleSearch = (e) => {
     e.preventDefault();
     fetchSchedules();
+  };
+
+  const handleReset = () => {
+    const defaultFilters = { origin: '', destination: '', date: '' };
+    setFilters(defaultFilters);
+    fetchSchedules(defaultFilters);
   };
 
   const getTakenSeats = (schedule) => {
@@ -79,7 +86,14 @@ function SearchContent() {
             <label>Tanggal</label>
             <input type="date" className="glass-input" value={filters.date} onChange={e => setFilters({ ...filters, date: e.target.value })} />
           </div>
-          <button type="submit" className="btn btn-primary"><Search size={18} /> Cari</button>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+            <button type="submit" className={`btn btn-primary ${loading ? 'btn-loading' : ''}`} disabled={loading} style={{ flex: 1 }}>
+              {loading ? <span className="btn-spinner" /> : <><Search size={18} /> Cari</>}
+            </button>
+            <button type="button" className="btn btn-secondary tooltip-btn" onClick={handleReset} data-tooltip="Reset filter pencarian" aria-label="Reset filter" disabled={loading} style={{ padding: '0 16px' }}>
+              <RefreshCcw size={18} />
+            </button>
+          </div>
         </div>
       </form>
 
@@ -90,7 +104,13 @@ function SearchContent() {
       {loading ? (
         <div className="page-loading"><div className="spinner" /></div>
       ) : schedules.length === 0 ? (
-        <div className="glass empty-state"><Bus size={48} /><p>Tidak ada jadwal ditemukan</p></div>
+        <div className="glass empty-state">
+          <Bus size={48} />
+          <p>Tidak ada jadwal ditemukan</p>
+          {(filters.origin || filters.destination || filters.date) && (
+            <button className="btn btn-secondary btn-sm" onClick={handleReset} style={{ marginTop: 12 }}>Hapus Filter</button>
+          )}
+        </div>
       ) : (
         schedules.map(s => {
           const taken = getTakenSeats(s);
