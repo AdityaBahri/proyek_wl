@@ -86,11 +86,11 @@ function SearchContent() {
             <label>Tanggal</label>
             <input type="date" className="glass-input" value={filters.date} onChange={e => setFilters({ ...filters, date: e.target.value })} />
           </div>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', height: '100%' }}>
             <button type="submit" className={`btn btn-primary ${loading ? 'btn-loading' : ''}`} disabled={loading} style={{ flex: 1 }}>
               {loading ? <span className="btn-spinner" /> : <><Search size={18} /> Cari</>}
             </button>
-            <button type="button" className="btn btn-secondary tooltip-btn" onClick={handleReset} data-tooltip="Reset filter pencarian" aria-label="Reset filter" disabled={loading} style={{ padding: '0 16px' }}>
+            <button type="button" className="btn btn-secondary tooltip-btn" onClick={handleReset} data-tooltip="Reset filter pencarian" aria-label="Reset filter" disabled={loading}>
               <RefreshCcw size={18} />
             </button>
           </div>
